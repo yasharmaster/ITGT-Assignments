@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
 using namespace std;
 
 typedef vector<pair<int, int> > VectorPairInt;
@@ -73,7 +74,44 @@ public:
 			itr++;
 		}
 	}
+
+	IncidenceMatrix(int n, int e, int **matrix) {
+		this->n = n;
+		this->e = e;
+		this->matrix = matrix;
+	}
 	
+	VectorRep toVectorRep() {
+		VectorPairInt edges;
+
+		for (int i = 0; i < e; i++) {
+			int start, end, self = -1;
+
+			for (int j=0; j<n; j++) {
+				if (matrix[j][i] == 1) {
+					start = j;
+				}
+				else if (matrix[j][i] == 2) {
+					end = j;
+				}
+				else if (matrix[j][i] == 3) {
+					self = j;
+					break;
+				}
+			}
+
+			if (self != -1) {
+				edges.push_back(make_pair(self, self));
+			}
+			else {
+				edges.push_back(make_pair(start, end));
+			}
+		}
+
+		VectorRep graph(n, e, edges);
+		return graph;
+	}
+
 	void print() {
 		cout << "Printing Incidence Matrix\n";
 		for (int i = 0; i < n; i++) {
@@ -121,6 +159,24 @@ public:
 			itr++;
 		}
 	}
+
+	VectorRep toVectorRep() {
+		VectorPairInt edges;
+
+		for (int i = 0; i < e; i++) {
+			int start, end, self = -1;
+
+			for (int j=0; j<n; j++) {
+				if (matrix[j][i] != -1) {
+					edges.push_back(make_pair(j, matrix[j][i]));
+					break;
+				}
+			}
+
+		}
+		VectorRep graph(n, e, edges);
+		return graph;
+	}
 	
 	void print() {
 		cout << "Printing Incidence Matrix(2)\n";
@@ -129,6 +185,58 @@ public:
 				cout << matrix[i][j] << "\t";
 			}
 			cout << endl;
+		}
+	}
+};
+
+/*
+	Condensed Incidence Matrix Representation of the Graph
+	Each element of the array "edges" is an integer which is decimal representation
+	of same row of Incidence Matrix considering Base 4 form.
+*/
+class CondensedIncidenceMatrix {
+public:
+	int n, e;
+	int *edges;
+
+	CondensedIncidenceMatrix(VectorRep graph) {
+		n = graph.n;
+		e = graph.e;
+
+		IncidenceMatrix incidenceMatrix(graph);
+
+		int **matrix = incidenceMatrix.matrix;
+		edges = new int[n];
+		for (int i=0; i<n; i++) {
+			edges[i] = 0;
+			for (int j=0; j<e; j++) {
+				edges[i] += matrix[i][j]*pow(4, j);
+			}
+		}
+	}
+
+	VectorRep toVectorRep() {
+		int **matrix = new int*[n];
+		for (int i=0; i<n; i++) {
+			matrix[i] = new int[e];
+		}
+
+		for (int i=0; i<n; i++) {
+			int x = edges[i];
+			for (int j=0; j<e; j++) {
+				matrix[i][j] = x%4;
+				x /= 4;
+			}
+		}
+
+		IncidenceMatrix incidenceMatrix(n, e, matrix);
+		return incidenceMatrix.toVectorRep();
+	}
+
+	void print() {
+		cout << "Printing Condensed Incidence Matrix" << endl;
+		for (int i=0; i<n; i++) {
+			cout << edges[i] << endl;
 		}
 	}
 };
@@ -177,9 +285,25 @@ int main() {
 	incidenceMatrix.print();
 	cout << endl;
 	
+	VectorRep graph = incidenceMatrix.toVectorRep();
+	graph.print();
+	cout << endl;
+
 	IncidenceMatrixTwo incidenceMatrix2(vectorRep);
 	incidenceMatrix2.print();
 	cout << endl;
+
+	VectorRep graph1 = incidenceMatrix2.toVectorRep();
+	graph1.print();
+	cout << endl;
+
+	CondensedIncidenceMatrix condensed(vectorRep);
+	condensed.print();
+	cout << endl;
+
+	VectorRep graph2 = condensed.toVectorRep();
+	graph2.print();
+
 
 	return 0;
 }
